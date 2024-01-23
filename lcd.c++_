@@ -1,0 +1,82 @@
+#include <iostream>
+#include <vector>
+#include <string>
+
+using namespace std;
+
+void printHorizontalSegment(const int s, const int num, const vector<vector<int>> &segments, const int segment) {
+    if (segments[num][segment]) {
+        cout << " ";
+        for (int i = 0; i < s; ++i) cout << "-";
+    } else {
+        cout << " ";
+        for (int i = 0; i < s; ++i) cout << " ";
+    }
+    cout << " ";
+}
+
+void printVerticalSegments(const int s, const int num, const vector<vector<int>> &segments, const int segment1, const int segment2) {
+
+    if (segments[num][segment1]) {
+        cout << "|";
+    } else {
+        cout << " ";
+    }
+    
+    for (int j = 0; j < s; j++) cout << " ";
+
+    if (segments[num][segment2]) {
+        cout << "|";
+    } else {
+        cout << " ";
+    }
+
+}
+
+int main() {
+    vector<vector<int>> segments = {
+        {1, 1, 1, 0, 1, 1, 1}, // 0
+        {0, 0, 1, 0, 0, 1, 0}, // 1
+        {1, 0, 1, 1, 1, 0, 1}, // 2
+        {1, 0, 1, 1, 0, 1, 1}, // 3
+        {0, 1, 1, 1, 0, 1, 0}, // 4
+        {1, 1, 0, 1, 0, 1, 1}, // 5
+        {1, 1, 0, 1, 1, 1, 1}, // 6
+        {1, 0, 1, 0, 0, 1, 0}, // 7
+        {1, 1, 1, 1, 1, 1, 1}, // 8
+        {1, 1, 1, 1, 0, 1, 1}  // 9
+    };
+    
+    int s;
+    string n;
+    while (true) {
+        cin >> s >> n;
+        if (s == 0 && n == "0") break;
+        
+        
+        for (int line = 0; line <  2 * s + 3; line++) {
+            
+            for (size_t digitIdx = 0; digitIdx < n.size(); ++digitIdx) {
+                int num = n[digitIdx] - '0';
+                
+                if (line == 0) {
+                   
+                    printHorizontalSegment(s, num, segments, 0);
+                } else if (line > 0 && line < s + 1) {
+                    printVerticalSegments(s, num, segments, 1, 2);
+                } else if (line == s + 1) {
+                    printHorizontalSegment(s, num, segments, 3);
+                } else if (line > s + 1 && line < 2 * s + 2) {
+                    printVerticalSegments(s, num, segments, 4, 5);
+                } else {
+                    printHorizontalSegment(s, num, segments, 6);
+                }
+                
+                if (digitIdx < n.size() - 1) cout << " ";
+            }
+            cout << "\n";
+        }
+        cout << "\n";
+    }
+    return 0;
+}

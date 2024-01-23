@@ -1,0 +1,173 @@
+#include <iostream>
+#include <vector>
+#include <queue>
+
+using namespace std;
+
+int maxSize = 0;
+
+
+int regionSize(int x, int y, int marker, vector<vector<int>>& binaryMaze) {
+    if (binaryMaze[x][y] != marker) return 0;
+    
+    int size = 1;
+    binaryMaze[x][y] = -1; // marca a célula como visitada
+
+    queue<pair<int, int>> q;
+    q.push({x, y});
+
+    while (!q.empty()) {
+        int cx = q.front().first;
+        int cy = q.front().second;
+        q.pop();
+
+        int dx[] = {-1, 0, 1, 0};
+        int dy[] = {0, -1, 0, 1};
+
+        for (int i = 0; i < 4; i++) {
+            int nx = cx + dx[i];
+            int ny = cy + dy[i];
+            if (nx >= 0 && nx < binaryMaze.size() && ny >= 0 && ny < binaryMaze[0].size() && binaryMaze[nx][ny] == marker) {
+                binaryMaze[nx][ny] = -1;
+                q.push({nx, ny});
+                size++;
+            }
+        }
+    }
+
+    return size;
+}
+
+
+
+void floodFill(int x, int y, int marker, vector<vector<int>>& binaryMaze) {
+    if (x < 0 || x >= binaryMaze.size() || y < 0 || y >= binaryMaze[0].size() || binaryMaze[x][y] != 0) 
+        return;
+    
+    binaryMaze[x][y] = marker;
+
+    floodFill(x-1, y, marker, binaryMaze);   // Cima
+    floodFill(x+1, y, marker, binaryMaze);   // Baixo
+    floodFill(x, y-1, marker, binaryMaze);   // Esquerda
+    floodFill(x, y+1, marker, binaryMaze);   // Direita
+}
+
+
+
+int countNeighbors(int x, int y, int value, vector<vector<int>>& binaryMaze) {
+    int count = 0;
+    if (x > 0 && binaryMaze[x-1][y] == value) count++;           // Cima
+    if (x < binaryMaze.size() - 1 && binaryMaze[x+1][y] == value) count++; // Baixo
+    if (y > 0 && binaryMaze[x][y-1] == value) count++;           // Esquerda
+    if (y < binaryMaze[0].size() - 1 && binaryMaze[x][y+1] == value) count++; // Direita
+    return count;
+}
+
+
+
+bool isCyclicRegion(int marker, vector<vector<int>>& binaryMaze) {
+    for (int i = 0; i < binaryMaze.size(); i++) {
+        for (int j = 0; j < binaryMaze[0].size(); j++) {
+            if (binaryMaze[i][j] == marker) {
+                if (countNeighbors(i, j, marker, binaryMaze) < 2) {
+                    return false;
+                }
+            }
+        }
+    }
+
+    for (int i = 0; i < binaryMaze.size(); i++) {
+        for (int j = 0; j < binaryMaze[0].size(); j++) {
+            if (binaryMaze[i][j] == marker) {
+                int tamanhoRegiao = regionSize(i, j, binaryMaze[i][j], binaryMaze);
+                if(tamanhoRegiao > maxSize){
+                    maxSize = tamanhoRegiao;
+                }
+            }
+        }
+    }
+    return true;
+}
+
+
+int countZeroRegions(vector<vector<int>>& binaryMaze) {
+    int marker = 2; // Começamos a marcar as regiões de zeros a partir do número 2 (pois 0 e 1 já estão sendo usados)
+    int cyclicRegions = 0;
+
+    for (int i = 0; i < binaryMaze.size(); i++) {
+        for (int j = 0; j < binaryMaze[0].size(); j++) {
+            if (binaryMaze[i][j] == 0) {
+                floodFill(i, j, marker, binaryMaze);
+                if (isCyclicRegion(marker, binaryMaze)) {
+                    cyclicRegions++;
+                }
+                marker++;
+            }
+        }
+    }
+
+    if(cyclicRegions > 0)
+        cout << cyclicRegions << " Cycles; the longest has length " << maxSize/3 << ".\n";
+    else
+        cout << "There are no cycles." << "\n";
+
+    return marker - 2; // Retorna o número de regiões de zeros encontradas
+}
+
+
+
+int main() {
+    int w, h;
+    int contador = 1;
+    while (true) {
+        cin >> w >> h;
+        if (w == 0 && h == 0) break;
+
+        vector<vector<char>> maze(h, vector<char>(w));
+        vector<vector<int>> binaryMaze(3*h, vector<int>(3*w, 1)); // Inicializa a matriz binária com 1s
+
+        for (int i = 0; i < h; i++) {
+            for (int j = 0; j < w; j++) {
+                cin >> maze[i][j];
+                // Converte os caracteres para a representação binária
+                if (maze[i][j] == '/') {
+                    binaryMaze[3*i][3*j] = 0;
+                    binaryMaze[3*i][3*j+1] = 0;
+                    binaryMaze[3*i][3*j+2] = 1;
+                    binaryMaze[3*i+1][3*j] = 0;
+                    binaryMaze[3*i+1][3*j+1] = 1;
+                    binaryMaze[3*i+1][3*j+2] = 0;
+                    binaryMaze[3*i+2][3*j] = 1;
+                    binaryMaze[3*i+2][3*j+1] = 0;
+                    binaryMaze[3*i+2][3*j+2] = 0;
+                } else {
+                    // Você pode inserir o padrão desejado para os outros caracteres aqui
+                    // Exemplo:
+                    binaryMaze[3*i][3*j] = 1;
+                    binaryMaze[3*i][3*j+1] = 0;
+                    binaryMaze[3*i][3*j+2] = 0;
+                    binaryMaze[3*i+1][3*j] = 0;
+                    binaryMaze[3*i+1][3*j+1] = 1;
+                    binaryMaze[3*i+1][3*j+2] = 0;
+                    binaryMaze[3*i+2][3*j] = 0;
+                    binaryMaze[3*i+2][3*j+1] = 0;
+                    binaryMaze[3*i+2][3*j+2] = 1;
+                }
+            }
+        }
+
+
+        cout << "\nMaze #" << contador << ":\n";
+        int zeroRegions = countZeroRegions(binaryMaze);
+        //cout << "Número de regiões de zeros: " << zeroRegions << endl;
+
+       
+   
+
+        maxSize = 0;
+        contador++;
+
+
+    }
+    return 0;
+}
